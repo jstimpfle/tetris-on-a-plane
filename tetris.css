@@ -1,0 +1,47 @@
+div.tetrisGame {
+}
+
+div.tetrisScore {
+  position: absolute;
+  font-size: 20pt;
+  color: white;
+  background-color: black;
+  left: 0;
+  top: 0;
+  width: 300px;
+  height: 100px;
+}
+
+div.tetrisPreview {
+  position: absolute;
+  top: 120px;
+  left: 0;
+}
+
+div.tetrisUsage {
+  position: absolute;
+  top: 250px;
+  left: 0;
+}
+
+div.tetrisBoard {
+  width: 300px;  /* Assumption: 10 cols * 30px */
+  height: 500px;  /* Assumption: 20 rows * 30px */
+  position: absolute;
+  left: 400px;
+  top: 0;
+
+}
+
+div.tetrisBlock {
+  position: absolute;
+  width: 29px;
+  height: 29px;
+  border: 1px dotted black;
+  background-color: black;
+}
+
+div.tetrisBlock.habitated {
+  border: 1px dotted black;
+  background-color: gray;
+}
