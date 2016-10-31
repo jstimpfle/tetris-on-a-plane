@@ -352,10 +352,11 @@ function draw_tetrisUsage(game) {
   usageElem.classList.add('tetrisUsage');
   usageElem.innerHTML =
        "<table>" +
-      "<tr><th>Cursor Keys:</th><td>Steer / rotate</td></tr>" +
-      "<tr><th>Space bar:</th><td>Let fall</td></tr>" +
-      "<tr><th>Enter:</th><td>Toggle pause</td></tr>" +
-      "<tr><th>r:</th><td>Restart game</td></tr>" +
+      "<tr><th>Left/Right</th><td>Steer</td></tr>" +
+      "<tr><th>a/d</th><td>Rotate</td></tr>" +
+      "<tr><th>Space bar</th><td>Let fall</td></tr>" +
+      "<tr><th>Enter</th><td>Toggle pause</td></tr>" +
+      "<tr><th>r</th><td>Restart game</td></tr>" +
       "</table>";
   return usageElem;
 }
@@ -376,10 +377,10 @@ function run_tetris(containerElem) {
       } else if (kev.key == "ArrowRight") {
         game.steerRight();
         redraw(game, containerElem);
-      } else if (kev.key == "ArrowUp") {
+      } else if (kev.key == "ArrowUp" || kev.key == "a") {
         game.rotateLeft();
         redraw(game, containerElem);
-      } else if (kev.key == "ArrowDown") {
+      } else if (kev.key == "ArrowDown" || kev.key == "d") {
         game.rotateRight();
         redraw(game, containerElem);
       } else if (kev.key == " ") {
