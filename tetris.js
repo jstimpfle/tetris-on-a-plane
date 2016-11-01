@@ -1,7 +1,8 @@
-var NUM_ROWS = 20;
-var NUM_COLS = 10;
-var BLOCK_WIDTH = 30;
-var BLOCK_HEIGHT = 30;
+var TETRIS_NUM_ROWS = 20;
+var TETRIS_NUM_COLS = 10;
+var TETRIS_BLOCK_WIDTH = 30;
+var TETRIS_BLOCK_HEIGHT = 30;
+var TETRIS_TICK_MS = 400;
 
 function mkPiece(
     v11, v12, v13, v14,
@@ -9,22 +10,10 @@ function mkPiece(
     v31, v32, v33, v34,
     v41, v42, v43, v44) {
   return {
-    'v11': v11,
-    'v12': v12,
-    'v13': v13,
-    'v14': v14,
-    'v21': v21,
-    'v22': v22,
-    'v23': v23,
-    'v24': v24,
-    'v31': v31,
-    'v32': v32,
-    'v33': v33,
-    'v34': v34,
-    'v41': v41,
-    'v42': v42,
-    'v43': v43,
-    'v44': v44,
+    'v11': v11, 'v12': v12, 'v13': v13, 'v14': v14,
+    'v21': v21, 'v22': v22, 'v23': v23, 'v24': v24,
+    'v31': v31, 'v32': v32, 'v33': v33, 'v34': v34,
+    'v41': v41, 'v42': v42, 'v43': v43, 'v44': v44,
   }
 }
 
@@ -49,10 +38,17 @@ var tPiece = mkPiece(
   0, 0, 0, 0
 );
 
-var zPiece = mkPiece(
+var zlPiece = mkPiece(
   0, 0, 0, 0,
   0, 0, 1, 1,
   0, 1, 1, 0,
+  0, 0, 0, 0
+);
+
+var zrPiece = mkPiece(
+  0, 0, 0, 0,
+  0, 1, 1, 0,
+  0, 0, 1, 1,
   0, 0, 0, 0
 );
 
@@ -93,14 +89,14 @@ function intersects(rows, piece, y, x) {
   if (x + 1 < 0 && (piece.v12 || piece.v22 || piece.v32 || piece.v42)) return true;
   if (x + 2 < 0 && (piece.v13 || piece.v23 || piece.v33 || piece.v43)) return true;
   if (x + 3 < 0 && (piece.v14 || piece.v24 || piece.v34 || piece.v44)) return true;
-  if (x + 0 >= NUM_COLS && (piece.v11 || piece.v21 || piece.v31 || piece.v41)) return true;
-  if (x + 1 >= NUM_COLS && (piece.v12 || piece.v22 || piece.v32 || piece.v42)) return true;
-  if (x + 2 >= NUM_COLS && (piece.v13 || piece.v23 || piece.v33 || piece.v43)) return true;
-  if (x + 3 >= NUM_COLS && (piece.v14 || piece.v24 || piece.v34 || piece.v44)) return true;
-  if (y + 0 >= NUM_ROWS && (piece.v11 || piece.v12 || piece.v13 || piece.v14)) return true;
-  if (y + 1 >= NUM_ROWS && (piece.v21 || piece.v22 || piece.v23 || piece.v24)) return true;
-  if (y + 2 >= NUM_ROWS && (piece.v31 || piece.v32 || piece.v33 || piece.v34)) return true;
-  if (y + 3 >= NUM_ROWS && (piece.v41 || piece.v42 || piece.v43 || piece.v44)) return true;
+  if (x + 0 >= TETRIS_NUM_COLS && (piece.v11 || piece.v21 || piece.v31 || piece.v41)) return true;
+  if (x + 1 >= TETRIS_NUM_COLS && (piece.v12 || piece.v22 || piece.v32 || piece.v42)) return true;
+  if (x + 2 >= TETRIS_NUM_COLS && (piece.v13 || piece.v23 || piece.v33 || piece.v43)) return true;
+  if (x + 3 >= TETRIS_NUM_COLS && (piece.v14 || piece.v24 || piece.v34 || piece.v44)) return true;
+  if (y + 0 >= TETRIS_NUM_ROWS && (piece.v11 || piece.v12 || piece.v13 || piece.v14)) return true;
+  if (y + 1 >= TETRIS_NUM_ROWS && (piece.v21 || piece.v22 || piece.v23 || piece.v24)) return true;
+  if (y + 2 >= TETRIS_NUM_ROWS && (piece.v31 || piece.v32 || piece.v33 || piece.v34)) return true;
+  if (y + 3 >= TETRIS_NUM_ROWS && (piece.v41 || piece.v42 || piece.v43 || piece.v44)) return true;
   if (piece.v11 && rows[0+y][0+x]) return true;
   if (piece.v12 && rows[0+y][1+x]) return true;
   if (piece.v13 && rows[0+y][2+x]) return true;
@@ -140,49 +136,31 @@ function apply_piece(rows, piece, y, x) {
 }
 
 function kill_rows(rows) {
-  var out = [];
-  var numRowsKilled = 0;
-  for (var i = 0; i < NUM_ROWS; i++) {
-    var haveUnset = false;
-    for (var j = 0; j < NUM_COLS; j++)
-      if (!rows[i][j])
-        haveUnset = true;
-    if (!haveUnset) {
-      numRowsKilled++;
-    } else {
-      var newRow = [];
-      for (var j = 0; j < NUM_COLS; j++)
-        newRow.push(rows[i][j]);
-      out.push(newRow);
+  var newRows = [];
+  var k = TETRIS_NUM_ROWS;
+  for (var i = TETRIS_NUM_ROWS; i --> 0;) {
+    for (var j = 0; j < TETRIS_NUM_COLS; j++) {
+      if (!rows[i][j]) {
+        newRows[--k] = rows[i].slice();
+        break;
+      }
     }
   }
-  for (var i = 0; i < numRowsKilled; i++) {
-    var newRow = [];
-    for (var j = 0; j < NUM_COLS; j++)
-      newRow.push(false);
-    out.unshift(newRow);
-  }
-  return { 'rows': out, 'numRowsKilled': numRowsKilled };
-}
-
-function draw_blocks(rows, num_rows, num_cols) {
-  var boardElem = document.createElement('div');
-  for (var i = 0; i < num_rows; i++) {
-    for (var j = 0; j < num_cols; j++) {
-      var blockElem = document.createElement('div');
-      blockElem.classList.add('tetrisBlock');
-      if (rows[i][j])
-        blockElem.classList.add('habitated');
-      blockElem.style.top = (i * BLOCK_HEIGHT) + 'px';
-      blockElem.style.left = (j * BLOCK_WIDTH) + 'px';
-      boardElem.appendChild(blockElem);
+  var numRowsKilled = k;
+  while (k-- > 0) {
+    newRows[k] = [];
+    for (var i = 0; i < TETRIS_NUM_COLS; i++) {
+      newRows[k][i] = 0;
     }
   }
-  return boardElem;
+  return {
+    'rows': newRows,
+    'numRowsKilled': numRowsKilled
+  };
 }
 
 function randomPiece() {
-  var pieces = [ blockPiece, longPiece, tPiece, zPiece, llPiece, lrPiece ];
+  var pieces = [ blockPiece, longPiece, tPiece, zlPiece, zrPiece, llPiece, lrPiece ];
   var i = Math.floor(Math.random() * pieces.length);
   return pieces[i];
 }
@@ -196,58 +174,62 @@ function TetrisGame() {
   this.pieceY = 0;
   this.pieceX = 3;
   this.rows = [];
-  for (var i = 0; i < NUM_ROWS; i++) {
-    var newRow = [];
-    for (var j = 0; j < NUM_COLS; j++)
-      newRow.push(false);
-    this.rows.push(newRow);
+  for (var i = 0; i < TETRIS_NUM_ROWS; i++) {
+    this.rows[i] = []
+    for (var j = 0; j < TETRIS_NUM_COLS; j++) {
+      this.rows[i][j] = 0;
+    }
   }
+}
+
+TetrisGame.prototype._freeze_piece = function() {
+    this.score += 1;
+    apply_piece(this.rows, this.currentPiece, this.pieceY, this.pieceX);
+    var r = kill_rows(this.rows);
+    this.rows = r.rows;
+    this.score += r.numRowsKilled * r.numRowsKilled * TETRIS_NUM_COLS;
+}
+
+TetrisGame.prototype._fetch_next_piece = function() {
+    if (intersects(this.rows, this.nextPiece, 0, TETRIS_NUM_COLS / 2 - 2)) {
+      this.gameOver = true;
+    } else {
+      this.currentPiece = this.nextPiece;
+      this.pieceY = 0;
+      this.pieceX = TETRIS_NUM_COLS / 2 - 2;
+      this.nextPiece = randomPiece();
+    }
+}
+
+TetrisGame.prototype.tick = function() {
+  if (this.paused || this.gameOver)
+    return false;
+  if (intersects(this.rows, this.currentPiece, this.pieceY + 1, this.pieceX)) {
+    this._freeze_piece();
+    this._fetch_next_piece();
+  } else {
+    this.pieceY += 1;
+  }
+  return true;
 }
 
 TetrisGame.prototype.togglePaused = function() {
   this.paused = !this.paused;
 }
 
-TetrisGame.prototype.fetch_next_piece = function() {
-    var newPiece = this.nextPiece
-    var newY = 0;
-    var newX = 3;
-    if (intersects(this.rows, newPiece, newY, newX)) {
-      alert('GAME OVER');
-      this.gameOver = true;
-    }
-    this.nextPiece = randomPiece();
-    this.currentPiece = newPiece;
-    this.pieceY = newY;
-    this.pieceX = newX;
-}
-
-TetrisGame.prototype.tick = function() {
-  if (this.paused)
-    return false;
-  if (this.gameOver)
-    return false;
-  if (intersects(this.rows, this.currentPiece, this.pieceY + 1, this.pieceX)) {
-    apply_piece(this.rows, this.currentPiece, this.pieceY, this.pieceX);
-    this.fetch_next_piece();
-    this.score += 1;
-  } else {
-    this.pieceY += 1;
-  }
-  var r = kill_rows(this.rows);
-  this.rows = r.rows;
-  this.score += r.numRowsKilled * r.numRowsKilled * NUM_COLS;
-  return true;
-}
-
 TetrisGame.prototype.steerLeft = function() {
   if (!intersects(this.rows, this.currentPiece, this.pieceY, this.pieceX - 1))
-    this.pieceX--;
+    this.pieceX -= 1;
 }
 
 TetrisGame.prototype.steerRight = function() {
   if (!intersects(this.rows, this.currentPiece, this.pieceY, this.pieceX + 1))
-    this.pieceX++
+    this.pieceX += 1;
+}
+
+TetrisGame.prototype.steerDown = function() {
+  if (!intersects(this.rows, this.currentPiece, this.pieceY + 1, this.pieceX))
+    this.pieceY += 1;
 }
 
 TetrisGame.prototype.rotateLeft = function() {
@@ -268,15 +250,11 @@ TetrisGame.prototype.letFall = function() {
 }
 
 TetrisGame.prototype.get_rows = function() {
-  var out = [];
-  for (var i = 0; i < NUM_ROWS; i++) {
-    out.push([]);
-    for (var j = 0; j < NUM_COLS; j++) {
-      out[i].push(this.rows[i][j]);
-    }
-  }
-  apply_piece(out, this.currentPiece, this.pieceY, this.pieceX);
-  return out;
+  var rows = [];
+  for (var i = 0; i < TETRIS_NUM_ROWS; i++)
+    rows[i] = this.rows[i].slice();
+  apply_piece(rows, this.currentPiece, this.pieceY, this.pieceX);
+  return rows;
 }
 
 TetrisGame.prototype.get_next_piece = function() {
@@ -285,6 +263,26 @@ TetrisGame.prototype.get_next_piece = function() {
 
 TetrisGame.prototype.get_score = function() {
   return this.score;
+}
+
+TetrisGame.prototype.get_game_over = function() {
+  return this.gameOver;
+}
+
+function draw_blocks(rows, num_rows, num_cols) {
+  var boardElem = document.createElement('div');
+  for (var i = 0; i < num_rows; i++) {
+    for (var j = 0; j < num_cols; j++) {
+      var blockElem = document.createElement('div');
+      blockElem.classList.add('tetrisBlock');
+      if (rows[i][j])
+        blockElem.classList.add('habitated');
+      blockElem.style.top = (i * TETRIS_BLOCK_HEIGHT) + 'px';
+      blockElem.style.left = (j * TETRIS_BLOCK_WIDTH) + 'px';
+      boardElem.appendChild(blockElem);
+    }
+  }
+  return boardElem;
 }
 
 function draw_tetrisGame(game) {
@@ -319,16 +317,18 @@ function draw_tetrisRightPane(game) {
 
 function draw_tetrisBoard(game) {
   var rows = game.get_rows();
-  var boardElem = draw_blocks(rows, NUM_ROWS, NUM_COLS);
+  var boardElem = draw_blocks(rows, TETRIS_NUM_ROWS, TETRIS_NUM_COLS);
   boardElem.classList.add('tetrisBoard');
   return boardElem;
 }
 
 function draw_tetrisScore(game) {
-  var score = game.get_score(game);
+  var score = game.get_score();
   var scoreElem = document.createElement('div');
   scoreElem.classList.add('tetrisScore');
   scoreElem.innerHTML = '<p>SCORE: ' + score + '</p>';
+  if (game.get_game_over())
+    scoreElem.innerHTML += '<p>GAME OVER</p>'
   return scoreElem;
 }
 
@@ -352,7 +352,7 @@ function draw_tetrisUsage(game) {
   usageElem.classList.add('tetrisUsage');
   usageElem.innerHTML =
        "<table>" +
-      "<tr><th>Left/Right</th><td>Steer</td></tr>" +
+      "<tr><th>Cursor Keys</th><td>Steer</td></tr>" +
       "<tr><th>a/d</th><td>Rotate</td></tr>" +
       "<tr><th>Space bar</th><td>Let fall</td></tr>" +
       "<tr><th>Enter</th><td>Toggle pause</td></tr>" +
@@ -361,34 +361,57 @@ function draw_tetrisUsage(game) {
   return usageElem;
 }
 
-function redraw(game, containerElem) {
+function tetris_redraw(game, containerElem) {
   var gameElem = draw_tetrisGame(game);
   containerElem.innerHTML = '';
   containerElem.appendChild(gameElem);
 }
 
-function run_tetris(containerElem) {
-  var game = new TetrisGame();
+function tetris_run(containerElem) {
+  var game = null;
+  var handler = null;
+
+  function setIntervalHandler() {
+    handler = setInterval(
+      function() {
+        if (game.tick())
+          tetris_redraw(game, containerElem);
+      },
+      TETRIS_TICK_MS
+    );
+  }
+
+  function clearIntervalHandler() {
+    clearInterval(handler);
+    handler = null;
+  }
+
   window.addEventListener('keydown', function(kev) {
       var consumed = true;
-      if (kev.key == "ArrowLeft") {
+      if (kev.key === "ArrowLeft") {
         game.steerLeft();
-        redraw(game, containerElem);
-      } else if (kev.key == "ArrowRight") {
+        tetris_redraw(game, containerElem);
+      } else if (kev.key === "ArrowRight") {
         game.steerRight();
-        redraw(game, containerElem);
-      } else if (kev.key == "ArrowUp" || kev.key == "a") {
+        tetris_redraw(game, containerElem);
+      } else if (kev.key === "ArrowDown") {
+        game.steerDown();
+        tetris_redraw(game, containerElem);
+      } else if (kev.key === "a") {
         game.rotateLeft();
-        redraw(game, containerElem);
-      } else if (kev.key == "ArrowDown" || kev.key == "d") {
+        tetris_redraw(game, containerElem);
+      } else if (kev.key === "d") {
         game.rotateRight();
-        redraw(game, containerElem);
-      } else if (kev.key == " ") {
+        tetris_redraw(game, containerElem);
+      } else if (kev.key === " ") {
         game.letFall();
-        redraw(game, containerElem);
-      } else if (kev.key == "Enter") {
+        clearIntervalHandler();
+        setIntervalHandler();
+        game.tick();
+        tetris_redraw(game, containerElem);
+      } else if (kev.key === "Enter") {
         game.togglePaused();
-      } else if (kev.key == "r") {
+      } else if (kev.key === "r") {
         game = new TetrisGame();
       } else {
         consumed = false;
@@ -396,9 +419,8 @@ function run_tetris(containerElem) {
       if (consumed)
         kev.preventDefault();
   });
-  redraw(game, containerElem);
-  var intervalHandler = setInterval(function() {
-        if (game.tick())
-          redraw(game, containerElem);
-      }, 400);
+
+  game = new TetrisGame();
+  tetris_redraw(game, containerElem);
+  setIntervalHandler();
 }
