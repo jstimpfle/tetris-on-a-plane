@@ -340,10 +340,10 @@ function tetris_run(containerElem) {
       } else if (kev.key === "ArrowDown") {
         game.steerDown();
         redraw(game, containerElem);
-      } else if (kev.key === "a") {
+      } else if (kev.key === "a" || (kev.key == "ArrowUp" && !kev.shiftKey)) {
         game.rotateLeft();
         redraw(game, containerElem);
-      } else if (kev.key === "d") {
+      } else if (kev.key === "d" || (kev.key == "ArrowUp" && kev.shiftKey)) {
         game.rotateRight();
         redraw(game, containerElem);
       } else if (kev.key === " ") {
