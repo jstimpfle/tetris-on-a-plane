@@ -284,14 +284,8 @@ function draw_tetrisScore(game) {
 }
 
 function draw_tetrisPreview(game) {
-  var pieceRows = [
-    [false, false, false, false],
-    [false, false, false, false],
-    [false, false, false, false],
-    [false, false, false, false]
-  ]
-  apply_piece(pieceRows, game.get_next_piece(), 0, 0);
-  var pieceElem = draw_blocks(pieceRows, 4, 4);
+  var piece = game.get_next_piece();
+  var pieceElem = draw_blocks(piece, 4, 4);
   var previewElem = document.createElement('div');
   previewElem.classList.add('tetrisPreview');
   previewElem.appendChild(pieceElem);
