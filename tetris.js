@@ -3,6 +3,14 @@ var NUM_COLS = 10;
 var BLOCK_WIDTH = 30;
 var BLOCK_HEIGHT = 30;
 var TICK_MS = 400;
+var CURSOR_LEFT = 37;
+var CURSOR_RIGHT = 39;
+var CURSOR_DOWN = 40;
+var KEY_a = 65;
+var KEY_d = 68;
+var KEY_r = 82;
+var KEY_ENTER = 13;
+var KEY_SPACE = 32;
 
 var blockPiece = [
   [0, 0, 0, 0],
@@ -331,30 +339,30 @@ function tetris_run(containerElem) {
 
   window.addEventListener('keydown', function(kev) {
       var consumed = true;
-      if (kev.key === "ArrowLeft") {
+      if (kev.keyCode === CURSOR_LEFT) {
         game.steerLeft();
         redraw(game, containerElem);
-      } else if (kev.key === "ArrowRight") {
+      } else if (kev.keyCode === CURSOR_RIGHT) {
         game.steerRight();
         redraw(game, containerElem);
-      } else if (kev.key === "ArrowDown") {
+      } else if (kev.keyCode === CURSOR_DOWN) {
         game.steerDown();
         redraw(game, containerElem);
-      } else if (kev.key === "a") {
+      } else if (kev.keyCode === KEY_a) {
         game.rotateLeft();
         redraw(game, containerElem);
-      } else if (kev.key === "d") {
+      } else if (kev.keyCode === KEY_d) {
         game.rotateRight();
         redraw(game, containerElem);
-      } else if (kev.key === " ") {
+      } else if (kev.keyCode === KEY_SPACE) {
         game.letFall();
         clearIntervalHandler();
         setIntervalHandler();
         game.tick();
         redraw(game, containerElem);
-      } else if (kev.key === "Enter") {
+      } else if (kev.keyCode === KEY_ENTER) {
         game.togglePaused();
-      } else if (kev.key === "r") {
+      } else if (kev.keyCode === KEY_r) {
         game = new TetrisGame();
       } else {
         consumed = false;
