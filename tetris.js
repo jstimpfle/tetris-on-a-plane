@@ -6,9 +6,9 @@ var TICK_MS = 400;
 var CURSOR_LEFT = 37;
 var CURSOR_RIGHT = 39;
 var CURSOR_DOWN = 40;
-var KEY_a = 65;
-var KEY_d = 68;
-var KEY_r = 82;
+var KEY_A = 65;
+var KEY_D = 68;
+var KEY_R = 82;
 var KEY_ENTER = 13;
 var KEY_SPACE = 32;
 
@@ -89,10 +89,14 @@ function intersects(rows, piece, y, x) {
 }
 
 function apply_piece(rows, piece, y, x) {
+  var newRows = [];
+  for (var i = 0; i < NUM_ROWS; i++)
+    newRows[i] = rows[i].slice();
   for (var i = 0; i < 4; i++)
     for (var j = 0; j < 4; j++)
       if (piece[i][j])
-        rows[y+i][x+j] = 1;
+        newRows[y+i][x+j] = 1;
+  return newRows;
 }
 
 function kill_rows(rows) {
@@ -145,7 +149,7 @@ TetrisGame.prototype.tick = function() {
     return false;
   if (intersects(this.rows, this.currentPiece, this.pieceY + 1, this.pieceX)) {
     /* burn current piece into board */
-    apply_piece(this.rows, this.currentPiece, this.pieceY, this.pieceX);
+    this.rows = apply_piece(this.rows, this.currentPiece, this.pieceY, this.pieceX);
     var r = kill_rows(this.rows);
     this.rows = r.rows;
     this.score += 1 + r.numRowsKilled * r.numRowsKilled * NUM_COLS;
@@ -198,14 +202,11 @@ TetrisGame.prototype.rotateRight = function() {
 TetrisGame.prototype.letFall = function() {
   while (!intersects(this.rows, this.currentPiece, this.pieceY+1, this.pieceX))
     this.pieceY += 1;
+  this.tick();
 }
 
 TetrisGame.prototype.get_rows = function() {
-  var rows = [];
-  for (var i = 0; i < NUM_ROWS; i++)
-    rows[i] = this.rows[i].slice();
-  apply_piece(rows, this.currentPiece, this.pieceY, this.pieceX);
-  return rows;
+  return apply_piece(this.rows, this.currentPiece, this.pieceY, this.pieceX);
 }
 
 TetrisGame.prototype.get_next_piece = function() {
@@ -314,10 +315,11 @@ function redraw(game, containerElem) {
 
 function tetris_run(containerElem) {
   var game = null;
-  var handler = null;
+  var intervalHandler = null;
+  var keyHandler = null;
 
   function setIntervalHandler() {
-    handler = setInterval(
+    intervalHandler = setInterval(
       function() {
         if (game.tick())
           redraw(game, containerElem);
@@ -327,45 +329,48 @@ function tetris_run(containerElem) {
   }
 
   function clearIntervalHandler() {
-    clearInterval(handler);
-    handler = null;
+    clearInterval(IntervalHandler);
+    intervalHandler = null;
   }
 
-  window.addEventListener('keydown', function(kev) {
-      var consumed = true;
-      if (kev.keyCode === CURSOR_LEFT) {
-        game.steerLeft();
-        redraw(game, containerElem);
-      } else if (kev.keyCode === CURSOR_RIGHT) {
-        game.steerRight();
-        redraw(game, containerElem);
-      } else if (kev.keyCode === CURSOR_DOWN) {
-        game.steerDown();
-        redraw(game, containerElem);
-      } else if (kev.keyCode === KEY_a) {
-        game.rotateLeft();
-        redraw(game, containerElem);
-      } else if (kev.keyCode === KEY_d) {
-        game.rotateRight();
-        redraw(game, containerElem);
-      } else if (kev.keyCode === KEY_SPACE) {
-        game.letFall();
-        clearIntervalHandler();
-        setIntervalHandler();
-        game.tick();
-        redraw(game, containerElem);
-      } else if (kev.keyCode === KEY_ENTER) {
-        game.togglePaused();
-      } else if (kev.keyCode === KEY_r) {
-        game = new TetrisGame();
-      } else {
-        consumed = false;
-      }
-      if (consumed)
-        kev.preventDefault();
-  });
+  function setKeyHandler() {
+    keyHandler = containerElem.addEventListener('keydown', function(kev) {
+        if (kev.shiftKey || kev.altKey || kev.metaKey)
+          return;
+        var consumed = true;
+        if (kev.keyCode === CURSOR_LEFT) {
+          game.steerLeft();
+        } else if (kev.keyCode === CURSOR_RIGHT) {
+          game.steerRight();
+        } else if (kev.keyCode === CURSOR_DOWN) {
+          game.steerDown();
+        } else if (kev.keyCode === KEY_A) {
+          game.rotateLeft();
+        } else if (kev.keyCode === KEY_D) {
+          game.rotateRight();
+        } else if (kev.keyCode === KEY_SPACE) {
+          game.letFall();
+        } else if (kev.keyCode === KEY_ENTER) {
+          game.togglePaused();
+        } else if (kev.keyCode === KEY_R) {
+          game = new TetrisGame();
+        } else {
+          consumed = false;
+        }
+        if (consumed) {
+          kev.preventDefault();
+          redraw(game, containerElem);
+        }
+    });
+  }
+
+  function clearKeyHandler() {
+    containerElem.removeEventListener('keydown', keyHandler);
+    keyHandler = null;
+  }
 
   game = new TetrisGame();
   redraw(game, containerElem);
   setIntervalHandler();
+  setKeyHandler();
 }
