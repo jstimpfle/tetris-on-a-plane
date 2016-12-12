@@ -3,63 +3,45 @@ var NUM_COLS = 10;
 var BLOCK_WIDTH = 30;
 var BLOCK_HEIGHT = 30;
 var TICK_MS = 400;
-var CURSOR_LEFT = 37;
-var CURSOR_RIGHT = 39;
-var CURSOR_DOWN = 40;
+
+var pieces =
+  [[[0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]],
+   [[0, 0, 1, 0],
+    [0, 0, 1, 0],
+    [0, 0, 1, 0],
+    [0, 0, 1, 0]],
+   [[0, 0, 1, 0],
+    [0, 1, 1, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 0]],
+   [[0, 0, 0, 0],
+    [0, 0, 1, 1],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]],
+   [[0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 0, 1, 1],
+    [0, 0, 0, 0]],
+   [[0, 0, 1, 0],
+    [0, 0, 1, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]],
+   [[0, 1, 0, 0],
+    [0, 1, 0, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]]];
+
+var KEY_ENTER = 13;
+var KEY_SPACE = 32;
+var KEY_LEFT = 37;
+var KEY_RIGHT = 39;
+var KEY_DOWN = 40;
 var KEY_A = 65;
 var KEY_D = 68;
 var KEY_R = 82;
-var KEY_ENTER = 13;
-var KEY_SPACE = 32;
-
-var blockPiece = [
-  [0, 0, 0, 0],
-  [0, 1, 1, 0],
-  [0, 1, 1, 0],
-  [0, 0, 0, 0]
-];
-
-var longPiece = [
-  [0, 0, 1, 0],
-  [0, 0, 1, 0],
-  [0, 0, 1, 0],
-  [0, 0, 1, 0]
-];
-
-var tPiece = [
-  [0, 0, 1, 0],
-  [0, 1, 1, 0],
-  [0, 0, 1, 0],
-  [0, 0, 0, 0]
-];
-
-var zlPiece = [
-  [0, 0, 0, 0],
-  [0, 0, 1, 1],
-  [0, 1, 1, 0],
-  [0, 0, 0, 0]
-];
-
-var zrPiece = [
-  [0, 0, 0, 0],
-  [0, 1, 1, 0],
-  [0, 0, 1, 1],
-  [0, 0, 0, 0]
-];
-
-var llPiece = [
-  [0, 0, 1, 0],
-  [0, 0, 1, 0],
-  [0, 1, 1, 0],
-  [0, 0, 0, 0]
-];
-
-var lrPiece = [
-  [0, 1, 0, 0],
-  [0, 1, 0, 0],
-  [0, 1, 1, 0],
-  [0, 0, 0, 0]
-];
 
 function rotateLeft(piece) {
   return [
@@ -122,9 +104,7 @@ function kill_rows(rows) {
 }
 
 function randomPiece() {
-  var pieces = [blockPiece, longPiece, tPiece, zlPiece, zrPiece, llPiece, lrPiece];
-  var i = Math.floor(Math.random() * pieces.length);
-  return pieces[i];
+  return pieces[Math.floor(Math.random() * pieces.length)];
 }
 
 function TetrisGame() {
@@ -167,52 +147,52 @@ TetrisGame.prototype.tick = function () {
   return true;
 }
 
-TetrisGame.prototype.steerLeft = function() {
+TetrisGame.prototype.steerLeft = function () {
   if (!intersects(this.rows, this.currentPiece, this.pieceY, this.pieceX - 1))
     this.pieceX -= 1;
 }
 
-TetrisGame.prototype.steerRight = function() {
+TetrisGame.prototype.steerRight = function () {
   if (!intersects(this.rows, this.currentPiece, this.pieceY, this.pieceX + 1))
     this.pieceX += 1;
 }
 
-TetrisGame.prototype.steerDown = function() {
+TetrisGame.prototype.steerDown = function () {
   if (!intersects(this.rows, this.currentPiece, this.pieceY + 1, this.pieceX))
     this.pieceY += 1;
 }
 
-TetrisGame.prototype.rotateLeft = function() {
+TetrisGame.prototype.rotateLeft = function () {
   var newPiece = rotateLeft(this.currentPiece);
   if (!intersects(this.rows, newPiece, this.pieceY, this.pieceX))
     this.currentPiece = newPiece;
 }
 
-TetrisGame.prototype.rotateRight = function() {
+TetrisGame.prototype.rotateRight = function () {
   var newPiece = rotateRight(this.currentPiece);
   if (!intersects(this.rows, newPiece, this.pieceY, this.pieceX))
     this.currentPiece = newPiece;
 }
 
-TetrisGame.prototype.letFall = function() {
+TetrisGame.prototype.letFall = function () {
   while (!intersects(this.rows, this.currentPiece, this.pieceY+1, this.pieceX))
     this.pieceY += 1;
   this.tick();
 }
 
-TetrisGame.prototype.get_rows = function() {
+TetrisGame.prototype.get_rows = function () {
   return apply_piece(this.rows, this.currentPiece, this.pieceY, this.pieceX);
 }
 
-TetrisGame.prototype.get_next_piece = function() {
+TetrisGame.prototype.get_next_piece = function () {
   return this.nextPiece;
 }
 
-TetrisGame.prototype.get_score = function() {
+TetrisGame.prototype.get_score = function () {
   return this.score;
 }
 
-TetrisGame.prototype.get_game_over = function() {
+TetrisGame.prototype.get_game_over = function () {
   return this.gameOver;
 }
 
@@ -333,11 +313,11 @@ function tetris_run(containerElem) {
           mustpause = true;
         } else if (kev.keyCode === KEY_R) {
           game = new TetrisGame();
-        } else if (kev.keyCode === CURSOR_LEFT) {
+        } else if (kev.keyCode === KEY_LEFT) {
           game.steerLeft();
-        } else if (kev.keyCode === CURSOR_RIGHT) {
+        } else if (kev.keyCode === KEY_RIGHT) {
           game.steerRight();
-        } else if (kev.keyCode === CURSOR_DOWN) {
+        } else if (kev.keyCode === KEY_DOWN) {
           game.steerDown();
         } else if (kev.keyCode === KEY_A) {
           game.rotateLeft();
