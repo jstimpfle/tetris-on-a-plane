@@ -128,7 +128,6 @@ function randomPiece() {
 }
 
 function TetrisGame() {
-  this.paused = false;
   this.gameOver = false;
   this.score = 0;
   this.currentPiece = randomPiece();
@@ -144,8 +143,8 @@ function TetrisGame() {
   }
 }
 
-TetrisGame.prototype.tick = function() {
-  if (this.paused || this.gameOver)
+TetrisGame.prototype.tick = function () {
+  if (this.gameOver)
     return false;
   if (intersects(this.rows, this.currentPiece, this.pieceY + 1, this.pieceX)) {
     /* burn current piece into board */
@@ -166,10 +165,6 @@ TetrisGame.prototype.tick = function() {
     this.pieceY += 1;
   }
   return true;
-}
-
-TetrisGame.prototype.togglePaused = function() {
-  this.paused = !this.paused;
 }
 
 TetrisGame.prototype.steerLeft = function() {
@@ -237,8 +232,8 @@ function draw_blocks(rows, num_rows, num_cols) {
   return boardElem;
 }
 
-function draw_tetrisGame(game) {
-  var leftPaneElem = draw_tetrisLeftPane(game);
+function draw_tetrisGame(game, isPaused) {
+  var leftPaneElem = draw_tetrisLeftPane(game, isPaused);
   var rightPaneElem = draw_tetrisRightPane(game);
   var gameElem = document.createElement('div');
   gameElem.classList.add('tetrisGame');
@@ -247,8 +242,8 @@ function draw_tetrisGame(game) {
   return gameElem;
 }
 
-function draw_tetrisLeftPane(game) {
-  var scoreElem = draw_tetrisScore(game);
+function draw_tetrisLeftPane(game, isPaused) {
+  var scoreElem = draw_tetrisScore(game, isPaused);
   var previewElem = draw_tetrisPreview(game);
   var usageElem = draw_tetrisUsage(game);
   var leftPaneElem = document.createElement('div');
@@ -274,11 +269,13 @@ function draw_tetrisBoard(game) {
   return boardElem;
 }
 
-function draw_tetrisScore(game) {
+function draw_tetrisScore(game, isPaused) {
   var score = game.get_score();
   var scoreElem = document.createElement('div');
   scoreElem.classList.add('tetrisScore');
   scoreElem.innerHTML = '<p>SCORE: ' + score + '</p>';
+  if (isPaused)
+    scoreElem.innerHTML += '<p>PAUSED</p>'
   if (game.get_game_over())
     scoreElem.innerHTML += '<p>GAME OVER</p>'
   return scoreElem;
@@ -307,38 +304,36 @@ function draw_tetrisUsage(game) {
   return usageElem;
 }
 
-function redraw(game, containerElem) {
-  var gameElem = draw_tetrisGame(game);
+function redraw(game, isPaused, containerElem) {
+  var gameElem = draw_tetrisGame(game, isPaused);
   containerElem.innerHTML = '';
   containerElem.appendChild(gameElem);
 }
 
 function tetris_run(containerElem) {
-  var game = null;
-  var intervalHandler = null;
-  var keyHandler = null;
+  var game = new TetrisGame();
 
-  function setIntervalHandler() {
-    intervalHandler = setInterval(
-      function() {
+  play();
+
+  function play() {
+    var intervalHandler = setInterval(
+      function () {
         if (game.tick())
-          redraw(game, containerElem);
+          redraw(game, false, containerElem);
       },
       TICK_MS
     );
-  }
 
-  function clearIntervalHandler() {
-    clearInterval(IntervalHandler);
-    intervalHandler = null;
-  }
-
-  function setKeyHandler() {
-    keyHandler = containerElem.addEventListener('keydown', function(kev) {
+    function keyHandler(kev) {
         if (kev.shiftKey || kev.altKey || kev.metaKey)
           return;
         var consumed = true;
-        if (kev.keyCode === CURSOR_LEFT) {
+        var mustpause = false;
+        if (kev.keyCode === KEY_ENTER) {
+          mustpause = true;
+        } else if (kev.keyCode === KEY_R) {
+          game = new TetrisGame();
+        } else if (kev.keyCode === CURSOR_LEFT) {
           game.steerLeft();
         } else if (kev.keyCode === CURSOR_RIGHT) {
           game.steerRight();
@@ -350,27 +345,34 @@ function tetris_run(containerElem) {
           game.rotateRight();
         } else if (kev.keyCode === KEY_SPACE) {
           game.letFall();
-        } else if (kev.keyCode === KEY_ENTER) {
-          game.togglePaused();
-        } else if (kev.keyCode === KEY_R) {
-          game = new TetrisGame();
         } else {
           consumed = false;
         }
         if (consumed) {
           kev.preventDefault();
-          redraw(game, containerElem);
+          if (mustpause) {
+            containerElem.removeEventListener('keydown', keyHandler);
+            clearInterval(intervalHandler);
+            pause();
+          } else {
+            redraw(game, false, containerElem);
+          }
         }
-    });
+    }
+
+    containerElem.addEventListener('keydown', keyHandler);
   }
 
-  function clearKeyHandler() {
-    containerElem.removeEventListener('keydown', keyHandler);
-    keyHandler = null;
-  }
+  function pause() {
+    function keyHandler(kev) {
+      if (kev.keyCode == KEY_ENTER) {
+        containerElem.removeEventListener('keydown', keyHandler);
+        play();
+      }
+    }
 
-  game = new TetrisGame();
-  redraw(game, containerElem);
-  setIntervalHandler();
-  setKeyHandler();
+    containerElem.addEventListener('keydown', keyHandler);
+
+    redraw(game, true, containerElem);
+  }
 }
