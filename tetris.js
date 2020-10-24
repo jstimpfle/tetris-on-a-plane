@@ -39,8 +39,8 @@ var KEY_SPACE = 32;
 var KEY_LEFT = 37;
 var KEY_RIGHT = 39;
 var KEY_DOWN = 40;
-var KEY_A = 65;
-var KEY_D = 68;
+var KEY_Z = 65;
+var KEY_X = 68;
 var KEY_R = 82;
 
 function rotateLeft(piece) {
